@@ -1,7 +1,6 @@
 package cn.pc.springframework.beans.factory.config;
 
-import cn.pc.springframework.beans.factory.PropertyValue;
-import cn.pc.springframework.beans.factory.PropertyValues;
+import cn.pc.springframework.beans.PropertyValues;
 
 /**
  * @Desc

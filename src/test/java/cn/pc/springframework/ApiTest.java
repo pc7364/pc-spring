@@ -2,9 +2,8 @@ package cn.pc.springframework;
 
 import cn.pc.springframework.bean.UserDao;
 import cn.pc.springframework.bean.UserService;
-import cn.pc.springframework.beans.factory.BeanFactory;
-import cn.pc.springframework.beans.factory.PropertyValue;
-import cn.pc.springframework.beans.factory.PropertyValues;
+import cn.pc.springframework.beans.PropertyValue;
+import cn.pc.springframework.beans.PropertyValues;
 import cn.pc.springframework.beans.factory.config.BeanDefinition;
 import cn.pc.springframework.beans.factory.config.BeanReference;
 import cn.pc.springframework.beans.factory.support.DefaultListableBeanFactory;

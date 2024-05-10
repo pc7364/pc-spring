@@ -1,6 +1,4 @@
-package cn.pc.springframework.beans.factory;
-
-import javafx.beans.property.Property;
+package cn.pc.springframework.beans;
 
 import java.util.ArrayList;
 import java.util.List;

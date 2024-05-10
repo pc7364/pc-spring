@@ -1,4 +1,4 @@
-package cn.pc.springframework.beans.factory;
+package cn.pc.springframework.beans;
 
 /**
  * @Desc
