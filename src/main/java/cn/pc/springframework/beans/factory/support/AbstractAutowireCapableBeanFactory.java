@@ -1,7 +1,11 @@
 package cn.pc.springframework.beans.factory.support;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.pc.springframework.beans.BeansException;
+import cn.pc.springframework.beans.factory.PropertyValue;
+import cn.pc.springframework.beans.factory.PropertyValues;
 import cn.pc.springframework.beans.factory.config.BeanDefinition;
+import cn.pc.springframework.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
 
@@ -18,6 +22,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         Object bean = null;
         try {
             bean = createBeanInstance(beanDefinition , beanName , args);
+            // 给bean 填充属性
+            applyPropertyValues(beanName , bean , beanDefinition);
         } catch (Exception e) {
             throw new BeansException("Unable to instantiate bean " + beanName, e);
         }
@@ -44,6 +50,32 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             }
         }
         return getInstantiationStrategy().instantiate(beanDefinition , beanName , constructorToUse , args);
+    }
+
+    /**
+     * 在 applyPropertyValues 中，通过获取 beanDefinition.getPropertyValues() 循环进行属性填充操作，如果遇到的是 BeanReference，那么就需要递归获取 Bean 实例，调用 getBean 方法。
+     * 当把依赖的 Bean 对象创建完成后，会递归回现在属性填充中。这里需要注意我们并没有去处理循环依赖的问题，这部分内容较大，后续补充。
+     * @param beanName
+     * @param bean
+     * @param beanDefinition
+     */
+    protected void applyPropertyValues(String beanName, Object bean , BeanDefinition beanDefinition ) {
+        try {
+            PropertyValues propertyValues = beanDefinition.getPropertyValues();
+            for (PropertyValue propertyValue : propertyValues.getPropertyValues()) {
+                String name = propertyValue.getName();
+                Object value = propertyValue.getValue();
+                if (value instanceof BeanReference){
+                    // a 依赖 b 获取b的实例
+                    BeanReference beanReference = (BeanReference) value;
+                    value = getBean(beanReference.getBeanName());
+                }
+                BeanUtil.setFieldValue(bean , name , value);
+            }
+        }catch (Exception e){
+            throw new BeansException("error setting property values" + beanName, e);
+        }
+
     }
 
     public InstantiationStrategy getInstantiationStrategy() {
