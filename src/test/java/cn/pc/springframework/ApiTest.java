@@ -50,4 +50,29 @@ public class ApiTest {
         System.out.println(userService == userService2);
     }
 
+
+    /**
+     * test-03
+     */
+    @Test
+    public void test_BeanFactory03(){
+        // 1.初始化 BeanFactory
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+
+        // 2.注入bean
+        BeanDefinition beanDefinition = new BeanDefinition(UserService.class);
+        beanFactory.registerBeanDefinition("userService", beanDefinition);
+
+
+        UserService userService2 = (UserService) beanFactory.getBean("userService");
+        userService2.queryUserInfo();
+
+        // 3.获取bean
+        UserService userService = (UserService) beanFactory.getBean("userService" , "pc");
+        userService.queryUserInfo();
+
+        System.out.println(userService == userService2);
+        System.out.println();
+    }
+
 }
