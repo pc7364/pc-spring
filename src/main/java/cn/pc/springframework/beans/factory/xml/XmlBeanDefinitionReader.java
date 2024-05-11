@@ -1,0 +1,123 @@
+package cn.pc.springframework.beans.factory.xml;
+
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.XmlUtil;
+import cn.pc.springframework.beans.BeansException;
+import cn.pc.springframework.beans.PropertyValue;
+import cn.pc.springframework.beans.factory.config.BeanDefinition;
+import cn.pc.springframework.beans.factory.config.BeanReference;
+import cn.pc.springframework.beans.factory.support.AbstractBeanDefinitionReader;
+import cn.pc.springframework.beans.factory.support.BeanDefinitionRegistry;
+import cn.pc.springframework.core.io.Resource;
+import cn.pc.springframework.core.io.ResourceLoader;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * @Desc
+ * @Author pc
+ * @Date 2024/5/10 下午4:58
+ */
+public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
+
+
+    public XmlBeanDefinitionReader(BeanDefinitionRegistry registry) {
+        super(registry);
+    }
+
+    public XmlBeanDefinitionReader(BeanDefinitionRegistry registry, ResourceLoader resourceLoader) {
+        super(registry, resourceLoader);
+    }
+
+    @Override
+    public void loadBeanDefinitions(Resource resource) throws BeansException {
+        try {
+            try(InputStream inputStream = resource.getInputStream()){
+                doLoadBeanDefinitions(inputStream);
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            throw new BeansException("Could not load XML definitions from " + resource, e);
+        }
+    }
+
+
+    @Override
+    public void loadBeanDefinitions(Resource... resources) throws BeansException {
+        for (Resource resource : resources) {
+            loadBeanDefinitions(resource);
+        }
+    }
+
+    @Override
+    public void loadBeanDefinitions(String location) throws BeansException {
+        ResourceLoader resourceLoader = getResourceLoader();
+        Resource resource = resourceLoader.getResource(location);
+        loadBeanDefinitions(resource);
+    }
+
+
+    /**
+     * XmlBeanDefinitionReader 类最核心的内容就是对 XML 文件的解析，把我们本来在代码中的操作放到了通过解析 XML 自动注册的方式。
+     * 最终把读取出来的配置信息，创建成 BeanDefinition 以及 PropertyValue，最终把完整的 Bean 定义内容注册到 Bean 容器：getRegistry().registerBeanDefinition(beanName, beanDefinition)
+     * @param inputStream
+     * @throws ClassNotFoundException
+     */
+    private void doLoadBeanDefinitions(InputStream inputStream) throws ClassNotFoundException {
+        Document document = XmlUtil.readXML(inputStream);
+        Element root = document.getDocumentElement();
+        NodeList childNodes = root.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            //判断元素
+            if(!(childNodes.item(i) instanceof Element)){
+                continue;
+            }
+            // 判断对象
+            if (!"bean".equals(childNodes.item(i).getNodeName())){
+                continue;
+            }
+            //解析标签
+            Element bean = (Element) childNodes.item(i);
+            String id = bean.getAttribute("id");
+            String name = bean.getAttribute("name");
+            String className = bean.getAttribute("class");
+            //获取class ，方便获取类中的名称
+            Class<?> clazz = Class.forName(className);
+            String beanName = StrUtil.isNotEmpty(id) ? id : name;
+            if (StrUtil.isEmpty(beanName)){
+                beanName = StrUtil.lowerFirst(clazz.getSimpleName());
+            }
+
+            //定义bean
+            BeanDefinition beanDefinition = new BeanDefinition(clazz);
+            for (int j = 0 ; j < bean.getChildNodes().getLength() ; j++){
+                if (!(bean.getChildNodes().item(j) instanceof Element)){
+                    continue;
+                }
+                if (!"property".equals(bean.getChildNodes().item(j).getNodeName())){
+                    continue;
+                }
+                //解析标签property
+                Element property = (Element) bean.getChildNodes().item(j);
+                String attrName = property.getAttribute("name");
+                String attrValue = property.getAttribute("value");
+                String attrRef = property.getAttribute("ref");
+                //获取属性值： 引入对象，值对象
+                Object value = StrUtil.isNotEmpty(attrRef) ? new BeanReference(attrRef) : attrValue;
+                //创建属性值信息
+                PropertyValue propertyValue = new PropertyValue(attrName , value);
+                beanDefinition.getPropertyValues().addPropertyValue(propertyValue);
+            }
+            if (getRegistry().containsBeanDefinition(beanName)){
+                throw new BeansException("Bean [" + beanName + "] already exists");
+            }
+            //注册beanDefinition
+            getRegistry().registerBeanDefinition(beanName, beanDefinition);
+        }
+    }
+
+}
