@@ -31,6 +31,21 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         beanFactory.preInstantiateSingletons();
     }
 
+    @Override
+    public void registerShutDownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
+    }
+
+    /**
+     * 这里主要体现了关于注册钩子和关闭的方法实现，
+     * 上文提到过的 Runtime.getRuntime().addShutdownHook，可以尝试验证。
+     * 在一些中间件和监控系统的设计中也可以用得到，比如监测服务器宕机，执行备机启动操作。
+     */
+    @Override
+    public void close() {
+        getBeanFactory().destroySingleton();
+    }
+
     protected abstract void refreshBeanFactory() throws BeansException;
 
     protected abstract ConfigurableListableBeanFactory getBeanFactory();

@@ -1,14 +1,18 @@
 package cn.pc.springframework.beans.factory.support;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.pc.springframework.beans.BeansException;
 import cn.pc.springframework.beans.PropertyValue;
 import cn.pc.springframework.beans.PropertyValues;
+import cn.pc.springframework.beans.factory.DisposableBean;
+import cn.pc.springframework.beans.factory.InitializingBean;
 import cn.pc.springframework.beans.factory.config.BeanDefinition;
 import cn.pc.springframework.beans.factory.config.BeanPostProcessor;
 import cn.pc.springframework.beans.factory.config.BeanReference;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 
 /**
  * @Desc
@@ -30,9 +34,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         } catch (Exception e) {
             throw new BeansException("Unable to instantiate bean " + beanName, e);
         }
+        // 注册实现了 DisposableBean 接口的对象
+        registerDisposableBeanIfNecessary(beanName , bean , beanDefinition);
         addSingleton(beanName , bean);
         return bean;
     }
+
+
 
     /**
      * 接下来抽取 createBeanInstance 方法，在这个方法中需要注意 Constructor 代表了你有多少个构造函数，通过 beanClass.getDeclaredConstructors() 方式可以获取到你所有的构造函数，是一个集合。
@@ -82,11 +90,22 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     }
 
 
+    /**
+     * 主要分为两块来执行实现了 InitializingBean 接口的操作，处理 afterPropertiesSet 方法。另外一个是判断配置信息 init-method 是否存在，执行反射调用 initMethod.invoke(bean)。这两种方式都可以在 Bean 对象初始化过程中进行处理加载 Bean 对象中的初始化操作，让使用者可以额外新增加自己想要的动作。
+     * @param beanName
+     * @param bean
+     * @param beanDefinition
+     * @return
+     */
     private Object initializeBean(String beanName, Object bean, BeanDefinition beanDefinition) {
         // 1.执行 BeanPostProcessor Before 处理
         Object wrappedBean = applyBeanPostProcessorsBeforeInitialization(bean , beanName);
         //待完成内容
-        invokeInitMethods(beanName , wrappedBean , beanDefinition);
+        try {
+            invokeInitMethods(beanName , wrappedBean , beanDefinition);
+        } catch (Exception e) {
+            throw new BeansException("Unable to initialize bean " + beanName, e);
+        }
         // BeanPostProcessor Before 处理
         wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean , beanName);
         return wrappedBean;
@@ -104,8 +123,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return result;
     }
 
-    private void invokeInitMethods(String beanName, Object wrappedBean, BeanDefinition beanDefinition) {
-
+    private void invokeInitMethods(String beanName, Object bean, BeanDefinition beanDefinition) throws Exception {
+        // 实现接口判断
+        if (bean instanceof InitializingBean){
+            ((InitializingBean)bean).afterPropertiesSet();
+        }
+        // 配置信息 init-method {判断是为了避免二次执行销毁}
+        String initMethodName = beanDefinition.getInitMethodName();
+        if (StrUtil.isNotEmpty(initMethodName)){
+            Method method = beanDefinition.getBeanClass().getMethod(initMethodName);
+            if (method == null){
+                throw new BeansException("init method '" + initMethodName + "' not found");
+            }
+            method.invoke(bean);
+        }
     }
 
     private Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) {
@@ -118,6 +149,21 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             result = current;
         }
         return result;
+    }
+
+    /**
+     * 在创建 Bean 对象的实例的时候，需要把销毁方法保存起来，方便后续执行销毁动作进行调用。
+     * 那么这个销毁方法的具体方法信息，会被注册到 DefaultSingletonBeanRegistry 中新增加的 Map<String, DisposableBean> disposableBeans 属性中去，因为这个接口的方法最终可以被类 AbstractApplicationContext 的 close 方法通过 getBeanFactory().destroySingletons() 调用。
+     * 在注册销毁方法的时候，会根据是接口类型和配置类型统一交给 DisposableBeanAdapter 销毁适配器类来做统一处理。实现了某个接口的类可以被 instanceof 判断或者强转后调用接口方法
+     * @param beanName
+     * @param bean
+     * @param beanDefinition
+     */
+    private void registerDisposableBeanIfNecessary(String beanName, Object bean, BeanDefinition beanDefinition) {
+        if (bean instanceof DisposableBean || StrUtil.isNotEmpty(beanDefinition.getDestroyMethodName())){
+            registerDisposableBean(beanName , new DisposableBeanAdapter(bean , beanName , beanDefinition));
+        }
+
     }
 
 

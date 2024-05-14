@@ -1,11 +1,14 @@
 package cn.pc.springframework.test.bean;
 
+import cn.pc.springframework.beans.factory.DisposableBean;
+import cn.pc.springframework.beans.factory.InitializingBean;
+
 /**
  * @Desc
  * @Author pc
  * @Date 2024/5/9 17:14
  */
-public class UserService {
+public class UserService implements InitializingBean , DisposableBean {
 
     private String uId;
 
@@ -60,5 +63,15 @@ public class UserService {
                 ", company='" + company + '\'' +
                 ", location='" + location + '\'' +
                 '}';
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("执行 userService destroy 方法");
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        System.out.println("执行 userService afterPropertiesSet 方法");
     }
 }
