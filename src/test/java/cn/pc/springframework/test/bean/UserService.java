@@ -1,14 +1,16 @@
 package cn.pc.springframework.test.bean;
 
-import cn.pc.springframework.beans.factory.DisposableBean;
-import cn.pc.springframework.beans.factory.InitializingBean;
+import cn.pc.springframework.beans.BeansException;
+import cn.pc.springframework.beans.factory.*;
+import cn.pc.springframework.context.ApplicationContext;
+import cn.pc.springframework.context.ApplicationContextAware;
 
 /**
  * @Desc
  * @Author pc
  * @Date 2024/5/9 17:14
  */
-public class UserService implements InitializingBean , DisposableBean {
+public class UserService implements BeanNameAware, BeanClassLoaderAware , ApplicationContextAware , BeanFactoryAware {
 
     private String uId;
 
@@ -65,13 +67,35 @@ public class UserService implements InitializingBean , DisposableBean {
                 '}';
     }
 
+    private ApplicationContext applicationContext;
+    private BeanFactory beanFactory;
+
+
     @Override
-    public void destroy() throws Exception {
-        System.out.println("执行 userService destroy 方法");
+    public void setBeanClassLoader(ClassLoader classLoader) {
+        System.out.println("ClassLoader：" + classLoader);
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        System.out.println("执行 userService afterPropertiesSet 方法");
+    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+        this.beanFactory = beanFactory;
+    }
+
+    @Override
+    public void setBeanName(String name) {
+        System.out.println("Bean Name is：" + name);
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    public ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+
+    public BeanFactory getBeanFactory() {
+        return beanFactory;
     }
 }
