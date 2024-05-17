@@ -10,18 +10,18 @@ import cn.pc.springframework.context.ApplicationContextAware;
  * @Author pc
  * @Date 2024/5/9 17:14
  */
-public class UserService implements BeanNameAware, BeanClassLoaderAware , ApplicationContextAware , BeanFactoryAware {
+public class UserService {
 
     private String uId;
 
-    private UserDao userDao;
+    private IUserDao userDao;
 
     private String company;
 
     private String location;
 
-    public void queryUserInfo() {
-        System.out.println("查询用户信息：" + userDao.queryUserName(uId));
+    public String queryUserInfo() {
+        return userDao.queryUserName(uId) + "," + company + "," + location;
     }
 
     public String getuId() {
@@ -32,11 +32,11 @@ public class UserService implements BeanNameAware, BeanClassLoaderAware , Applic
         this.uId = uId;
     }
 
-    public UserDao getUserDao() {
+    public IUserDao getUserDao() {
         return userDao;
     }
 
-    public void setUserDao(UserDao userDao) {
+    public void setUserDao(IUserDao userDao) {
         this.userDao = userDao;
     }
 
@@ -57,45 +57,6 @@ public class UserService implements BeanNameAware, BeanClassLoaderAware , Applic
     }
 
 
-    @Override
-    public String toString() {
-        return "UserService{" +
-                "uId='" + uId + '\'' +
-                ", userDao=" + userDao +
-                ", company='" + company + '\'' +
-                ", location='" + location + '\'' +
-                '}';
-    }
-
-    private ApplicationContext applicationContext;
-    private BeanFactory beanFactory;
 
 
-    @Override
-    public void setBeanClassLoader(ClassLoader classLoader) {
-        System.out.println("ClassLoader：" + classLoader);
-    }
-
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        this.beanFactory = beanFactory;
-    }
-
-    @Override
-    public void setBeanName(String name) {
-        System.out.println("Bean Name is：" + name);
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
-
-    public ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
-    public BeanFactory getBeanFactory() {
-        return beanFactory;
-    }
 }
