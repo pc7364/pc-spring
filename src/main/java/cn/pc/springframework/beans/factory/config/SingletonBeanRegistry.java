@@ -16,5 +16,5 @@ public interface SingletonBeanRegistry {
     /**
      * 销毁单例bean
      */
-    void destroySingleton();
+    void registerSingleton(String beanName, Object singletonObject);
 }

@@ -32,6 +32,11 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
     }
 
     @Override
+    public void registerSingleton(String beanName, Object singletonObject) {
+        singletonObjects.put(beanName , singletonObject);
+    }
+
+
     public void destroySingleton() {
         Set<String> keySet = this.disposableBeans.keySet();
         Object[] disposableBeanNames = keySet.toArray();
@@ -51,14 +56,4 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
         disposableBeans.put(beanName , disposableBean);
     }
 
-
-
-    /**
-     * 这个方法可以被继承此类的其他类调用,包括：AbstractBeanFactory 以及继承的 DefaultListableBeanFactory 调用。
-     * @param beanName
-     * @param singletonObject
-     */
-    protected void addSingleton(String beanName , Object singletonObject) {
-        singletonObjects.put(beanName, singletonObject);
-    }
 }

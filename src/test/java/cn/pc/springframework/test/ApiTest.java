@@ -1,19 +1,9 @@
-package cn.pc.springframework;
+package cn.pc.springframework.test;
 
-import cn.hutool.core.io.IoUtil;
 import cn.pc.springframework.context.support.ClassPathXmlApplicationContext;
 import cn.pc.springframework.test.bean.UserService;
-import cn.pc.springframework.beans.factory.support.DefaultListableBeanFactory;
-import cn.pc.springframework.beans.factory.xml.XmlBeanDefinitionReader;
-import cn.pc.springframework.core.io.DefaultResourceLoader;
-import cn.pc.springframework.core.io.Resource;
-import cn.pc.springframework.test.common.MyBeanFactoryPostProcessor;
-import cn.pc.springframework.test.common.MyBeanPostProcessor;
-import org.junit.Before;
+import cn.pc.springframework.test.event.CustomEvent;
 import org.junit.Test;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * @Desc
@@ -218,19 +208,27 @@ public class ApiTest {
     }
 
 
-    @Test
-    public void test_factory_bean() {
-        // 1.初始化 BeanFactory
-        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
-        applicationContext.registerShutDownHook();
+//    @Test
+//    public void test_factory_bean() {
+//        // 1.初始化 BeanFactory
+//        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
+//        applicationContext.registerShutDownHook();
+//
+//        // 2. 调用代理方法
+//        UserService userService = applicationContext.getBean("userService", UserService.class);
+//        System.out.println("测试结果：" + userService.queryUserInfo());
+//        System.out.println("测试结果：" + userService.queryUserInfo());
+//        System.out.println("测试结果：" + userService.queryUserInfo());
+//        UserService userService1 = applicationContext.getBean("userService", UserService.class);
+//        System.out.println(userService1 == userService);
+//    }
 
-        // 2. 调用代理方法
-        UserService userService = applicationContext.getBean("userService", UserService.class);
-        System.out.println("测试结果：" + userService.queryUserInfo());
-        System.out.println("测试结果：" + userService.queryUserInfo());
-        System.out.println("测试结果：" + userService.queryUserInfo());
-        UserService userService1 = applicationContext.getBean("userService", UserService.class);
-        System.out.println(userService1 == userService);
+    @Test
+    public void test_event(){
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
+        applicationContext.publishEvent(new CustomEvent(applicationContext, 1019129009086763L, "成功了！"));
+
+        applicationContext.registerShutDownHook();
     }
 
 
