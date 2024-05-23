@@ -1,9 +1,18 @@
 package cn.pc.springframework.test;
 
+import cn.pc.springframework.aop.AdvisedSupport;
+import cn.pc.springframework.aop.TargetSource;
+import cn.pc.springframework.aop.aspectj.AspectJExpressionPointcut;
+import cn.pc.springframework.aop.framework.Cglib2AopProxy;
+import cn.pc.springframework.aop.framework.JdkDynamicAopProxy;
 import cn.pc.springframework.context.support.ClassPathXmlApplicationContext;
+import cn.pc.springframework.test.bean.IUserService;
 import cn.pc.springframework.test.bean.UserService;
+import cn.pc.springframework.test.bean.UserServiceInterceptor;
 import cn.pc.springframework.test.event.CustomEvent;
 import org.junit.Test;
+
+import java.lang.reflect.Method;
 
 /**
  * @Desc
@@ -232,6 +241,41 @@ public class ApiTest {
     }
 
 
+    /**
+     * 匹配验证
+     * @throws NoSuchMethodException
+     */
+    @Test
+    public void test_aop() throws NoSuchMethodException {
+        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut("execution(* cn.pc.springframework.test.bean.UserService.*(..))");
+        Class<UserService> clazz = UserService.class;
+        Method method = clazz.getDeclaredMethod("queryUserInfo");
+
+        System.out.println(pointcut.matches(clazz));
+        System.out.println(pointcut.matches(method, clazz));
+        // true、true
+    }
+
+
+    @Test
+    public void test_dynamic(){
+        // 目标对象
+        IUserService userService = new UserService();
+        // 组装代理信息
+        AdvisedSupport advisedSupport = new AdvisedSupport();
+        advisedSupport.setTargetSource(new TargetSource(userService));
+        advisedSupport.setMethodInterceptor(new UserServiceInterceptor());
+        advisedSupport.setMethodMatcher(new AspectJExpressionPointcut("execution(* cn.pc.springframework.test.bean.IUserService.*(..))"));
+
+        // 代理对象(JdkDynamicAopProxy)
+        IUserService proxyJdk = (IUserService) new JdkDynamicAopProxy(advisedSupport).getProxy();
+        System.out.println("测试结果：" + proxyJdk.queryUserInfo());
+
+        // 代理对象(Cglib2AopProxy)
+        IUserService proxyCglib = (IUserService) new Cglib2AopProxy(advisedSupport).getProxy();
+        // 测试调用
+        System.out.println("测试结果：" + proxyCglib.register("花花"));
+    }
 
 
 
