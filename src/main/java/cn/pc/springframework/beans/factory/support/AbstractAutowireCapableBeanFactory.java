@@ -6,9 +6,7 @@ import cn.pc.springframework.beans.BeansException;
 import cn.pc.springframework.beans.PropertyValue;
 import cn.pc.springframework.beans.PropertyValues;
 import cn.pc.springframework.beans.factory.*;
-import cn.pc.springframework.beans.factory.config.BeanDefinition;
-import cn.pc.springframework.beans.factory.config.BeanPostProcessor;
-import cn.pc.springframework.beans.factory.config.BeanReference;
+import cn.pc.springframework.beans.factory.config.*;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -18,13 +16,19 @@ import java.lang.reflect.Method;
  * @Author pc
  * @Date 2024/5/9 17:46
  */
-public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory{
+public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
 
     private InstantiationStrategy instantiationStrategy = new CglibSubclassingInstantiationStrategy();
     @Override
     protected Object createBean(String beanName, BeanDefinition beanDefinition ,Object[] args) throws BeansException {
         Object bean = null;
         try {
+            //判断是否返回代理bean对象
+            bean = resolveBeforeInstantiation(beanName , beanDefinition);
+            if (null != bean) {
+                return bean;
+            }
+
             bean = createBeanInstance(beanDefinition , beanName , args);
             // 给bean 填充属性
             applyPropertyValues(beanName , bean , beanDefinition);
@@ -42,6 +46,25 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return bean;
     }
 
+    private Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition) {
+        Object bean = applyBeanPostProcessorsBeforeInstantiation(beanDefinition.getBeanClass() , beanName);
+        if (null != bean){
+            bean = applyBeanPostProcessorsAfterInitialization(bean , beanName);
+        }
+        return bean;
+    }
+
+    protected Object applyBeanPostProcessorsBeforeInstantiation(Class<?> beanClass, String beanName) {
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor) {
+                Object result = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessBeforeInstantiation(beanClass, beanName);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+        return null;
+    }
 
 
     /**
@@ -127,7 +150,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         return wrappedBean;
     }
 
-    private Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName) {
+    @Override
+    public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName) {
         Object result = existingBean;
         for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
             Object current = beanPostProcessor.postProcessAfterInitialization(result, beanName);
@@ -155,7 +179,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         }
     }
 
-    private Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) {
+    @Override
+    public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName) {
         Object result = existingBean;
         for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
             Object current = beanPostProcessor.postProcessBeforeInitialization(result, beanName);

@@ -241,41 +241,49 @@ public class ApiTest {
     }
 
 
-    /**
-     * 匹配验证
-     * @throws NoSuchMethodException
-     */
-    @Test
-    public void test_aop() throws NoSuchMethodException {
-        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut("execution(* cn.pc.springframework.test.bean.UserService.*(..))");
-        Class<UserService> clazz = UserService.class;
-        Method method = clazz.getDeclaredMethod("queryUserInfo");
+//    /**
+//     * 匹配验证
+//     * @throws NoSuchMethodException
+//     */
+//    @Test
+//    public void test_aop() throws NoSuchMethodException {
+//        AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut("execution(* cn.pc.springframework.test.bean.UserService.*(..))");
+//        Class<UserService> clazz = UserService.class;
+//        Method method = clazz.getDeclaredMethod("queryUserInfo");
+//
+//        System.out.println(pointcut.matches(clazz));
+//        System.out.println(pointcut.matches(method, clazz));
+//        // true、true
+//    }
+//
+//
+//    @Test
+//    public void test_dynamic(){
+//        // 目标对象
+//        IUserService userService = new UserService();
+//        // 组装代理信息
+//        AdvisedSupport advisedSupport = new AdvisedSupport();
+//        advisedSupport.setTargetSource(new TargetSource(userService));
+//        advisedSupport.setMethodInterceptor(new UserServiceInterceptor());
+//        advisedSupport.setMethodMatcher(new AspectJExpressionPointcut("execution(* cn.pc.springframework.test.bean.IUserService.*(..))"));
+//
+//        // 代理对象(JdkDynamicAopProxy)
+//        IUserService proxyJdk = (IUserService) new JdkDynamicAopProxy(advisedSupport).getProxy();
+//        System.out.println("测试结果：" + proxyJdk.queryUserInfo());
+//
+//        // 代理对象(Cglib2AopProxy)
+//        IUserService proxyCglib = (IUserService) new Cglib2AopProxy(advisedSupport).getProxy();
+//        // 测试调用
+//        System.out.println("测试结果：" + proxyCglib.register("花花"));
+//    }
 
-        System.out.println(pointcut.matches(clazz));
-        System.out.println(pointcut.matches(method, clazz));
-        // true、true
+    @Test
+    public void test_aop() {
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:spring.xml");
+        IUserService userService = applicationContext.getBean("userService", IUserService.class);
+        System.out.println("测试结果：" + userService.queryUserInfo());
     }
 
-
-    @Test
-    public void test_dynamic(){
-        // 目标对象
-        IUserService userService = new UserService();
-        // 组装代理信息
-        AdvisedSupport advisedSupport = new AdvisedSupport();
-        advisedSupport.setTargetSource(new TargetSource(userService));
-        advisedSupport.setMethodInterceptor(new UserServiceInterceptor());
-        advisedSupport.setMethodMatcher(new AspectJExpressionPointcut("execution(* cn.pc.springframework.test.bean.IUserService.*(..))"));
-
-        // 代理对象(JdkDynamicAopProxy)
-        IUserService proxyJdk = (IUserService) new JdkDynamicAopProxy(advisedSupport).getProxy();
-        System.out.println("测试结果：" + proxyJdk.queryUserInfo());
-
-        // 代理对象(Cglib2AopProxy)
-        IUserService proxyCglib = (IUserService) new Cglib2AopProxy(advisedSupport).getProxy();
-        // 测试调用
-        System.out.println("测试结果：" + proxyCglib.register("花花"));
-    }
 
 
 
