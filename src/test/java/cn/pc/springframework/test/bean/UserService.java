@@ -4,6 +4,7 @@ import cn.pc.springframework.beans.BeansException;
 import cn.pc.springframework.beans.factory.*;
 import cn.pc.springframework.context.ApplicationContext;
 import cn.pc.springframework.context.ApplicationContextAware;
+import cn.pc.springframework.stereotype.Component;
 
 import java.util.Random;
 
@@ -12,7 +13,10 @@ import java.util.Random;
  * @Author pc
  * @Date 2024/5/9 17:14
  */
+@Component("userService")
 public class UserService implements IUserService {
+
+    private String token;
 
     public String queryUserInfo() {
         try {
@@ -32,6 +36,18 @@ public class UserService implements IUserService {
         return "注册用户：" + userName + " success！";
     }
 
+    @Override
+    public String toString() {
+        return "UserService#token = { " + token + " }";
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
+    }
 }
 
 
