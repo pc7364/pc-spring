@@ -7,6 +7,7 @@ import cn.pc.springframework.beans.PropertyValue;
 import cn.pc.springframework.beans.PropertyValues;
 import cn.pc.springframework.beans.factory.*;
 import cn.pc.springframework.beans.factory.config.*;
+import com.sun.org.apache.bcel.internal.generic.INSTANCEOF;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -30,6 +31,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             }
 
             bean = createBeanInstance(beanDefinition , beanName , args);
+            // 在设置 Bean 属性之前，允许 BeanPostProcessor 修改属性值
+            applyBeanPostProcessorsBeforeApplyingPropertyValues(bean , beanName , beanDefinition);
             // 给bean 填充属性
             applyPropertyValues(beanName , bean , beanDefinition);
             // 执行 Bean 的初始化方法和 BeanPostProcessor 的前置和后置处理方法
@@ -44,6 +47,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
             registerSingleton(beanName , bean);
         }
         return bean;
+    }
+
+    private void applyBeanPostProcessorsBeforeApplyingPropertyValues(Object bean, String beanName, BeanDefinition beanDefinition) {
+        for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
+            if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor){
+                PropertyValues pvs = ((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessPropertyValues(beanDefinition.getPropertyValues(), bean, beanName);
+                if (null != pvs){
+                    for (PropertyValue propertyValue : pvs.getPropertyValues()) {
+                        beanDefinition.getPropertyValues().addPropertyValue(propertyValue);
+                    }
+                }
+            }
+        }
     }
 
     private Object resolveBeforeInstantiation(String beanName, BeanDefinition beanDefinition) {

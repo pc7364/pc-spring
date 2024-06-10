@@ -6,6 +6,7 @@ import cn.pc.springframework.beans.factory.config.BeanDefinition;
 import cn.pc.springframework.beans.factory.config.BeanPostProcessor;
 import cn.pc.springframework.beans.factory.config.ConfigurableBeanFactory;
 import cn.pc.springframework.util.ClassUtils;
+import cn.pc.springframework.util.StringValueResolver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
     private ClassLoader beanClassLoader = ClassUtils.getDefaultClassLoader();
 
     private final List<BeanPostProcessor> beanPostProcessors = new ArrayList<BeanPostProcessor>();
+
+    /**
+     * String resolvers to apply e.g. to annotation attribute values
+     */
+    private final List<StringValueResolver> embeddedValueResolvers = new ArrayList<>();
 
     @Override
     public Object getBean(String name) throws BeansException {
@@ -70,6 +76,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
         this.beanPostProcessors.add(beanPostProcessor);
     }
 
+
+    @Override
+    public void addEmbeddedValueResolver(StringValueResolver valueResolver){
+        this.embeddedValueResolvers.add(valueResolver);
+    }
+    @Override
+    public String resolveEmbeddedValue(String value){
+        String result = value;
+        for (StringValueResolver embeddedValueResolver : this.embeddedValueResolvers) {
+            result = embeddedValueResolver.resolveStringValue(result);
+        }
+        return result;
+    }
+
     public List<BeanPostProcessor> getBeanPostProcessors() {
         return this.beanPostProcessors;
     }
@@ -77,4 +97,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
     public ClassLoader getBeanClassLoader() {
         return this.beanClassLoader;
     }
+
+
 }

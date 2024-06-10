@@ -2,6 +2,7 @@ package cn.pc.springframework.beans.factory.config;
 
 import cn.pc.springframework.beans.factory.BeanFactory;
 import cn.pc.springframework.beans.factory.HierarchicalBeanFactory;
+import cn.pc.springframework.util.StringValueResolver;
 
 /**
  * @Desc
@@ -18,4 +19,9 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory , Singl
      * 销毁单例bean
      */
     void destroySingleton();
+
+    void addEmbeddedValueResolver(StringValueResolver valueResolver);
+
+    String resolveEmbeddedValue(String value);
+
 }

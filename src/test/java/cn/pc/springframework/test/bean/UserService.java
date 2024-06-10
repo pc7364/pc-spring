@@ -2,6 +2,7 @@ package cn.pc.springframework.test.bean;
 
 import cn.pc.springframework.beans.BeansException;
 import cn.pc.springframework.beans.factory.*;
+import cn.pc.springframework.beans.factory.annotation.Autowired;
 import cn.pc.springframework.context.ApplicationContext;
 import cn.pc.springframework.context.ApplicationContextAware;
 import cn.pc.springframework.stereotype.Component;
@@ -18,13 +19,16 @@ public class UserService implements IUserService {
 
     private String token;
 
+    @Autowired
+    private UserDao userDao;
+
     public String queryUserInfo() {
         try {
             Thread.sleep(new Random(1).nextInt(100));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        return "小傅哥，100001，深圳";
+        return userDao.queryUserName("10001") + "，" + token;
     }
 
     public String register(String userName) {
